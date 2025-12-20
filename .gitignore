@@ -126,3 +126,4 @@ entitlements.plist
 
 # Local config
 CLAUDE.local.md
+Cargo.lock

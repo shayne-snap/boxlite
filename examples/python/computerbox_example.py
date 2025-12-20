@@ -42,8 +42,6 @@ async def test_all_functions():
         width, height = await desktop.get_screen_size()
         print(f"   ✓ Screen: {width}x{height}\n")
 
-        await asyncio.sleep(3600)
-
         # 3. screenshot()
         print("3. screenshot()")
         result = await desktop.screenshot()
