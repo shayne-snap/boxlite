@@ -316,7 +316,7 @@ pub fn generate_bpf_filter() -> Result<seccompiler::BpfProgram, JailerError> {
     })?;
 
     // Convert to BPF bytecode
-    filter.try_into().map_err(|e: seccompiler::Error| {
+    filter.try_into().map_err(|e: seccompiler::BackendError| {
         JailerError::Isolation(IsolationError::Seccomp(format!(
             "Failed to compile seccomp filter to BPF: {}",
             e

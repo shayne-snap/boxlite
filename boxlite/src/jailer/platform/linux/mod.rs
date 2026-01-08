@@ -19,7 +19,6 @@
 //! is not async-signal-safe (cannot be used in pre_exec hook).
 
 use crate::jailer::config::SecurityOptions;
-use crate::jailer::error::{IsolationError, JailerError};
 use crate::jailer::seccomp;
 use crate::runtime::layout::FilesystemLayout;
 use boxlite_shared::errors::BoxliteResult;
