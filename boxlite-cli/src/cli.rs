@@ -2,8 +2,32 @@
 //! This module contains all CLI-related code including the main CLI structure,
 //! subcommands, and flag definitions.
 
-use boxlite::BoxOptions;
+use boxlite::{BoxOptions, BoxliteOptions, BoxliteRuntime};
 use clap::{Args, Parser, Subcommand};
+
+/// Helper to parse CLI environment variables and apply them to BoxOptions
+pub fn apply_env_vars(env: &[String], opts: &mut BoxOptions) {
+    apply_env_vars_with_lookup(env, opts, |k| std::env::var(k).ok())
+}
+
+/// Helper to parse CLI environment variables with custom lookup for host variables
+pub fn apply_env_vars_with_lookup<F>(env: &[String], opts: &mut BoxOptions, lookup: F)
+where
+    F: Fn(&str) -> Option<String>,
+{
+    for env_str in env {
+        if let Some((k, v)) = env_str.split_once('=') {
+            opts.env.push((k.to_string(), v.to_string()));
+        } else if let Some(val) = lookup(env_str) {
+            opts.env.push((env_str.to_string(), val));
+        } else {
+            tracing::warn!(
+                "Environment variable '{}' not found on host, skipping",
+                env_str
+            );
+        }
+    }
+}
 
 // ============================================================================
 // CLI Definition
@@ -24,6 +48,13 @@ pub struct Cli {
 pub enum Commands {
     Run(crate::commands::run::RunArgs),
 
+    /// Create a new box
+    Create(crate::commands::create::CreateArgs),
+
+    /// List boxes
+    #[command(visible_alias = "ls", visible_alias = "ps")]
+    List(crate::commands::list::ListArgs),
+
     /// Remove one or more boxes
     Rm(crate::commands::rm::RmArgs),
 }
@@ -41,6 +72,20 @@ pub struct GlobalFlags {
     /// BoxLite home directory
     #[arg(long, global = true, env = "BOXLITE_HOME")]
     pub home: Option<std::path::PathBuf>,
+}
+
+impl GlobalFlags {
+    pub fn create_runtime(&self) -> anyhow::Result<BoxliteRuntime> {
+        let options = if let Some(home) = &self.home {
+            BoxliteOptions {
+                home_dir: home.clone(),
+            }
+        } else {
+            BoxliteOptions::default()
+        };
+
+        BoxliteRuntime::new(options).map_err(Into::into)
+    }
 }
 
 // ============================================================================
@@ -78,19 +123,7 @@ impl ProcessFlags {
         F: Fn(&str) -> Option<String>,
     {
         opts.working_dir = self.workdir.clone();
-
-        for env_str in &self.env {
-            if let Some((k, v)) = env_str.split_once('=') {
-                opts.env.push((k.to_string(), v.to_string()));
-            } else if let Some(val) = lookup(env_str) {
-                opts.env.push((env_str.to_string(), val));
-            } else {
-                tracing::warn!(
-                    "Environment variable '{}' not found on host, skipping",
-                    env_str
-                );
-            }
-        }
+        apply_env_vars_with_lookup(&self.env, opts, lookup);
         Ok(())
     }
 }

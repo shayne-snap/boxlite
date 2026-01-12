@@ -1,6 +1,6 @@
 use crate::cli::{GlobalFlags, ManagementFlags, ProcessFlags, ResourceFlags};
 use boxlite::BoxCommand;
-use boxlite::{BoxOptions, BoxliteOptions, BoxliteRuntime, LiteBox, RootfsSpec};
+use boxlite::{BoxOptions, BoxliteRuntime, LiteBox, RootfsSpec};
 use clap::Args;
 use futures::StreamExt;
 use nix::sys::signal::Signal;
@@ -43,15 +43,7 @@ struct BoxRunner {
 
 impl BoxRunner {
     fn new(args: RunArgs, global: &GlobalFlags) -> anyhow::Result<Self> {
-        let options = if let Some(home) = &global.home {
-            BoxliteOptions {
-                home_dir: home.clone(),
-            }
-        } else {
-            BoxliteOptions::default()
-        };
-
-        let rt = BoxliteRuntime::new(options)?;
+        let rt = global.create_runtime()?;
 
         Ok(Self { args, rt })
     }

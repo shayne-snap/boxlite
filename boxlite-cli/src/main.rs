@@ -34,6 +34,8 @@ async fn main() {
 
     let result = match cli.command {
         cli::Commands::Run(args) => commands::run::execute(args, &cli.global).await,
+        cli::Commands::Create(args) => commands::create::execute(args, &cli.global).await,
+        cli::Commands::List(args) => commands::list::execute(args, &cli.global).await,
         cli::Commands::Rm(args) => commands::rm::execute(args, &cli.global).await,
     };
 
