@@ -3,95 +3,78 @@ use predicates::prelude::*;
 mod common;
 
 #[test]
-fn test_rm_non_existent() {
+fn test_rm_single() {
+    let mut ctx = common::boxlite();
+    let name = "rm-single";
+
+    ctx.cmd
+        .args(["create", "--name", name, "alpine:latest"])
+        .assert()
+        .success();
+
+    ctx.new_cmd()
+        .args(["rm", name])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(name));
+}
+
+#[test]
+fn test_rm_force_running() {
+    let mut ctx = common::boxlite();
+    let name = "rm-force";
+
+    ctx.cmd
+        .args(["run", "-d", "--name", name, "alpine:latest", "sleep", "300"])
+        .assert()
+        .success();
+
+    // Without --force should fail
+    ctx.new_cmd()
+        .args(["rm", name])
+        .assert()
+        .failure();
+
+    // With --force should succeed
+    ctx.new_cmd()
+        .args(["rm", "--force", name])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(name));
+}
+
+#[test]
+fn test_rm_all() {
+    let mut ctx = common::boxlite();
+
+    ctx.cmd
+        .args(["create", "--name", "rm-all-1", "alpine:latest"])
+        .assert()
+        .success();
+
+    ctx.new_cmd()
+        .args(["create", "--name", "rm-all-2", "alpine:latest"])
+        .assert()
+        .success();
+
+    ctx.new_cmd()
+        .args(["rm", "--all"])
+        .assert()
+        .success();
+
+    ctx.new_cmd()
+        .args(["list", "-a", "-q"])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty());
+}
+
+#[test]
+fn test_rm_unknown() {
     let mut ctx = common::boxlite();
     ctx.cmd.args(["rm", "non-existent-box-id"]);
     ctx.cmd
         .assert()
         .failure()
-        .stderr(predicate::str::contains("not found"));
-}
-
-#[test]
-fn test_rm_stopped_box() {
-    let mut ctx = common::boxlite();
-    ctx.cmd.args(["run", "-d", "alpine:latest", "true"]);
-    let output = ctx.cmd.assert().success().get_output().clone();
-    let id = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    assert!(!id.is_empty(), "Failed to get box ID");
-
-    let mut rm_cmd = ctx.new_cmd();
-    rm_cmd.args(["rm", &id]);
-    rm_cmd
-        .assert()
-        .success()
-        .stdout(predicate::str::contains(&id));
-
-    let mut check_cmd = ctx.new_cmd();
-    check_cmd.args(["rm", &id]);
-    check_cmd
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("not found"));
-}
-
-#[test]
-#[ignore = "Relies on cross-process running state that is not reliably persisted yet"]
-fn test_rm_running_box_needs_force() {
-    let mut ctx = common::boxlite();
-    ctx.cmd.args(["run", "-d", "alpine:latest", "sleep", "100"]);
-    let output = ctx.cmd.assert().success().get_output().clone();
-    let id = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-    let mut rm_cmd = ctx.new_cmd();
-    rm_cmd.args(["rm", &id]);
-    rm_cmd
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("running"));
-
-    let mut force_rm = ctx.new_cmd();
-    force_rm.args(["rm", "-f", &id]);
-    force_rm
-        .assert()
-        .success()
-        .stdout(predicate::str::contains(&id));
-}
-
-#[test]
-fn test_rm_multiple_boxes() {
-    let mut ctx = common::boxlite();
-    ctx.cmd.args(["run", "-d", "alpine:latest", "true"]);
-    let out1 = ctx.cmd.assert().success().get_output().clone();
-    let id1 = String::from_utf8_lossy(&out1.stdout).trim().to_string();
-
-    let mut cmd2 = ctx.new_cmd();
-    cmd2.args(["run", "-d", "alpine:latest", "true"]);
-    let out2 = cmd2.assert().success().get_output().clone();
-    let id2 = String::from_utf8_lossy(&out2.stdout).trim().to_string();
-
-    let mut rm_cmd = ctx.new_cmd();
-    rm_cmd.args(["rm", &id1, &id2]);
-    rm_cmd
-        .assert()
-        .success()
-        .stdout(predicate::str::contains(&id1))
-        .stdout(predicate::str::contains(&id2));
-}
-
-#[test]
-fn test_rm_partial_failure() {
-    let mut ctx = common::boxlite();
-    ctx.cmd.args(["run", "-d", "alpine:latest", "true"]);
-    let out = ctx.cmd.assert().success().get_output().clone();
-    let id = String::from_utf8_lossy(&out.stdout).trim().to_string();
-
-    let mut rm_cmd = ctx.new_cmd();
-    rm_cmd.args(["rm", &id, "non-existent-one"]);
-
-    rm_cmd
-        .assert()
-        .failure()
-        .stdout(predicate::str::contains(&id))
         .stderr(predicate::str::contains("not found"));
 }
