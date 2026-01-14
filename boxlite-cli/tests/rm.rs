@@ -30,10 +30,7 @@ fn test_rm_force_running() {
         .success();
 
     // Without --force should fail
-    ctx.new_cmd()
-        .args(["rm", name])
-        .assert()
-        .failure();
+    ctx.new_cmd().args(["rm", name]).assert().failure();
 
     // With --force should succeed
     ctx.new_cmd()
@@ -57,10 +54,7 @@ fn test_rm_all() {
         .assert()
         .success();
 
-    ctx.new_cmd()
-        .args(["rm", "--all"])
-        .assert()
-        .success();
+    ctx.new_cmd().args(["rm", "--all"]).assert().success();
 
     ctx.new_cmd()
         .args(["list", "-a", "-q"])

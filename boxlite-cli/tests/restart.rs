@@ -7,15 +7,8 @@ fn test_restart_running() {
     let mut ctx = common::boxlite();
     let name = "restart-running";
 
-    ctx.cmd.args([
-        "run",
-        "-d",
-        "--name",
-        name,
-        "alpine:latest",
-        "sleep",
-        "300",
-    ]);
+    ctx.cmd
+        .args(["run", "-d", "--name", name, "alpine:latest", "sleep", "300"]);
     ctx.cmd.assert().success();
 
     ctx.new_cmd()
@@ -32,21 +25,11 @@ fn test_restart_stopped() {
     let mut ctx = common::boxlite();
     let name = "restart-stopped";
 
-    ctx.cmd.args([
-        "run",
-        "-d",
-        "--name",
-        name,
-        "alpine:latest",
-        "sleep",
-        "300",
-    ]);
+    ctx.cmd
+        .args(["run", "-d", "--name", name, "alpine:latest", "sleep", "300"]);
     ctx.cmd.assert().success();
 
-    ctx.new_cmd()
-        .args(["stop", name])
-        .assert()
-        .success();
+    ctx.new_cmd().args(["stop", name]).assert().success();
 
     // Stopped -> Running
     ctx.new_cmd()

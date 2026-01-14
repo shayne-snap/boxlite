@@ -7,15 +7,8 @@ fn test_stop_running() {
     let mut ctx = common::boxlite();
     let name = "stop-running";
 
-    ctx.cmd.args([
-        "run",
-        "-d",
-        "--name",
-        name,
-        "alpine:latest",
-        "sleep",
-        "300",
-    ]);
+    ctx.cmd
+        .args(["run", "-d", "--name", name, "alpine:latest", "sleep", "300"]);
     ctx.cmd.assert().success();
 
     ctx.new_cmd()
@@ -32,26 +25,13 @@ fn test_stop_stopped_idempotency() {
     let mut ctx = common::boxlite();
     let name = "stop-idempotent";
 
-    ctx.cmd.args([
-        "run",
-        "-d",
-        "--name",
-        name,
-        "alpine:latest",
-        "sleep",
-        "300",
-    ]);
+    ctx.cmd
+        .args(["run", "-d", "--name", name, "alpine:latest", "sleep", "300"]);
     ctx.cmd.assert().success();
 
-    ctx.new_cmd()
-        .args(["stop", name])
-        .assert()
-        .success();
+    ctx.new_cmd().args(["stop", name]).assert().success();
 
-    ctx.new_cmd()
-        .args(["stop", name])
-        .assert()
-        .success();
+    ctx.new_cmd().args(["stop", name]).assert().success();
 
     ctx.cleanup_box(name);
 }
@@ -62,27 +42,12 @@ fn test_stop_multiple() {
     let box1 = "stop-multi-1";
     let box2 = "stop-multi-2";
 
-    ctx.cmd.args([
-        "run",
-        "-d",
-        "--name",
-        box1,
-        "alpine:latest",
-        "sleep",
-        "300",
-    ]);
+    ctx.cmd
+        .args(["run", "-d", "--name", box1, "alpine:latest", "sleep", "300"]);
     ctx.cmd.assert().success();
 
     ctx.new_cmd()
-        .args([
-            "run",
-            "-d",
-            "--name",
-            box2,
-            "alpine:latest",
-            "sleep",
-            "300",
-        ])
+        .args(["run", "-d", "--name", box2, "alpine:latest", "sleep", "300"])
         .assert()
         .success();
 
