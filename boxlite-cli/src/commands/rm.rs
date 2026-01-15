@@ -18,6 +18,18 @@ pub struct RmArgs {
 pub async fn execute(args: RmArgs, global: &crate::cli::GlobalFlags) -> anyhow::Result<()> {
     let runtime = global.create_runtime()?;
 
+    // Require confirmation for --all unless --force is specified
+    if args.all && !args.force {
+        use std::io::{self, Write};
+        eprint!("WARNING! This will remove all boxes. Are you sure? [y/N] ");
+        io::stderr().flush()?;
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+        if !input.trim().eq_ignore_ascii_case("y") {
+            return Ok(());
+        }
+    }
+
     let targets = if args.all {
         runtime
             .list_info()

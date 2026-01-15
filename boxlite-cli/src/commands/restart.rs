@@ -30,6 +30,17 @@ pub async fn execute(args: RestartArgs, global: &crate::cli::GlobalFlags) -> any
             continue;
         }
 
+        // After stop, handle is invalidated. Get a new handle.
+        // Came across:Handle invalidated after stop(). Use runtime.get() to get a new handle.
+        let litebox = match runtime.get(&target).await? {
+            Some(b) => b,
+            None => {
+                eprintln!("Error: Box disappeared after stop: {}", target);
+                errors.push(format!("{}: disappeared after stop", target));
+                continue;
+            }
+        };
+
         if let Err(e) = litebox.start().await {
             eprintln!("Error restarting box '{}': {}", target, e);
             errors.push(format!("{}: {}", target, e));

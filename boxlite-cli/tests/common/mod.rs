@@ -85,7 +85,7 @@ pub fn boxlite() -> TestContext {
         home
     });
 
-    let bin_path = env!("CARGO_BIN_EXE_boxlite");
+    let bin_path: &str = env!("CARGO_BIN_EXE_boxlite");
     let mut cmd = Command::new(bin_path);
     // You can override this with .timeout(Duration::from_secs(N))
     cmd.timeout(Duration::from_secs(60));
